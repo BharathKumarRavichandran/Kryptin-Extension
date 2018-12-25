@@ -1,0 +1,31 @@
+{
+    "manifest_version": 2,
+    "name": "Kryptin",
+    "version": "1.0.0",
+    "description": "Kryptin helps you to connect with other people who are taking same MOOCs as you.",
+    "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+    "icons": {
+        "128": "assets/icons/icon_128.png",
+        "48": "assets/icons/icon_48.png",
+        "19": "assets/icons/icon_19.png"
+    },
+    "browser_action": {
+        "default_icon": "assets/icons/icon_19.png",
+        "background_pages": "html/popup.html"
+    },
+
+    "options_page": "html/options.html",
+
+    "permissions": [
+        "storage",
+        "activeTab" ,
+        "tabs",
+        "http://localhost:8000/*",
+        "http://www.kryptin.com/*"
+    ],
+    "content_security_policy": "script-src 'self' https://kryptin.com; object-src 'self'",
+    "content_scripts": [{
+        "js": ["js/jquery-3.3.1.min.js", "js/popup.js"],
+        "matches": ["http://*/*", "https://*/*"]
+    }]
+}

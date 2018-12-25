@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Kryptin</title>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat|Raleway" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/tabs.css">
+    <script src="../js/jquery-3.3.1.min.js"></script>
+
+</head>
+<body>
+
+    <button id="homeBtn" class="tablink">Home</button>
+    <button id="onlineBtn" class="tablink">Online</button>
+    <button id="chatBtn" class="tablink">Chat</button>
+
+    <div id="homeSection" class="tabcontent">
+        <h3>
+            Hello <span id="username"></span> !
+        </h3>
+        <br/>
+        <section id="section1">
+            <div>Visit any course from supported platforms to connect with other students :
+                <ul>
+                    <li>Coursera</li>
+                    <li>Udemy</li>
+                    <li>Udacity</li>
+                </ul>
+            </div>
+        </section>
+        <br/>
+        <section id="section2" style="display: block;">
+            <div>
+                <span>Learning Platform : </span><span id="platform"></span>
+            </div>
+            <div>
+                <span>Course name : </span><span id="coursename"></span>
+            </div>
+        </section>
+        <br/>
+        <br/>
+    </div>
+
+    <div id="onlineSection" class="tabcontent">
+        <h3>Users online:</h3>
+        <div id="usersList"></div>
+    </div>
+
+    <div id="chatSection" class="tabcontent">
+        <h3>Chat</h3>
+        <p>Some news this fine day!</p> 
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/popup.js"></script>
+</body>
+</html>

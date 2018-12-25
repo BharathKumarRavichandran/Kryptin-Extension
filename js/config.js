@@ -1,0 +1,1 @@
+server_url = "http://www.kryptin.com/api/"; // Add localhost alias as http://www.kryptin.com/ in /etc/hosts file due to cors issue
