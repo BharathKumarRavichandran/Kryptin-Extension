@@ -1,55 +1,55 @@
 $(function(){
 
-    var server_url   = "http://localhost:8000/api/"; // Add localhost alias as http://www.kryptin.com/ in /etc/hosts file due of CORS issue
+    var serverUrl    = "http://localhost:8000/api/"; // Add localhost alias as http://www.kryptin.com/ in /etc/hosts file due of CORS issue
     var username     = "foobar";
-    var user_token   = '';
+    var userToken    = '';
     var platform     = "";
-    var course_name  = "";
-    var online_users = [];
-    var get_online_users;
+    var course       = "";
+    var onlineUsers  = [];
+    var getOnlineUsers;
     var oppUsername  = "";
 
-    function openPage(btn_id, section_id, color) {
+    function openPage(btnId, sectionId, color) {
 
         var i;
-        var btn        = $("#"+btn_id);
+        var btn        = $("#"+btnId);
         var tablinks   = $(".tablink");
-        var section    = $("#"+section_id);
+        var section    = $("#"+sectionId);
         var tabcontent = $(".tabcontent");
         
         for (i = 0; i < tabcontent.length; i++) {
             tabcontent[i].style.display = "none";
         }
     
-        document.getElementById(section_id).style.display = "block";
+        document.getElementById(sectionId).style.display = "block";
     
-        document.getElementById(btn_id).style.backgroundColor = color;
+        document.getElementById(btnId).style.backgroundColor = color;
     
     }
 
-    function refresh_online_users(){
+    function refreshOnlineUsers(){
         $.ajax({
-            url: server_url+"user/online/get/",
+            url: serverUrl+"user/online/get/",
             type: "POST",
             crossDomain: true,
             data: {
-                "username" : username,
+                "token"    : userToken,
                 "platform" : platform,
-                "course"   : course_name
+                "course"   : course
             },
             success: function(data){
                 if(data.status_code == 200){
-                    online_users = data.data;
-                    append_online_users();
+                    onlineUsers = data.data;
+                    appendOnlineUsers();
                 }
             }
         });
     }
 
-    function append_online_users(){
-        if(online_users){
-            $.each(online_users, function(index, online_user){
-                $("#usersList").append('<div class="card list-container"><span><span id=onlineUsername'+index+' class="list-name">'+online_user['username']+'</span><button type="button" id=chatWith'+index+' class="btn material-raised-button chat-btn">Chat</button></span></div>');
+    function appendOnlineUsers(){
+        if(onlineUsers){
+            $.each(onlineUsers, function(index, onlineUser){
+                $("#usersList").append('<div class="card list-container"><span><span id=onlineUsername'+index+' class="list-name">'+onlineUser['username']+'</span><button type="button" id=chatWith'+index+' class="btn material-raised-button chat-btn">Chat</button></span></div>');
             });    
         }
     }
@@ -109,7 +109,7 @@ $(function(){
 
             oppUsername = $("#onlineUsername"+k).html();
 
-            console.log("Start your chat with "+oppUsername);
+            console.log("Chat box with "+oppUsername+" opened");
 
             $("#chatBtn").css("backgroundColor", "blue");
             $("#chatBtn").prop('disabled', false);
@@ -125,23 +125,23 @@ $(function(){
     
     $("#homeBtn").click();
 
-    var get_uid_promise = new Promise(function (resolve, reject) {
-        chrome.storage.sync.get('user_token', function(items) {
-            user_token = items.user_token;
-            if(!user_token){
-                user_token = getRandomToken();
-                chrome.storage.sync.set({user_token: user_token}, function() {
+    var getUIdPromise = new Promise(function (resolve, reject) {
+        chrome.storage.sync.get('userToken', function(items) {
+            userToken = items.userToken;
+            if(!userToken){
+                userToken = getRandomToken();
+                chrome.storage.sync.set({userToken: userToken}, function() {
                     console.log("User token created")
                 });
             }
             else{
                 console.log("User token retrieved")
             }
-            resolve(user_token);
+            resolve(userToken);
         });
     });
 
-    get_uid_promise.then(function (user_token) {
+    getUIdPromise.then(function (userToken) {
 
         chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
         
@@ -155,60 +155,60 @@ $(function(){
     
             const path = pathname.split('/');
     
-            var put_online = false;
+            var putOnline = false;
             
             if(hostname == "www.coursera.org" && path[1] == "learn"){
     
-                put_online = true;
-                platform = "Coursera";
-                course_name  = path[2];
+                putOnline = true;
+                platform  = "Coursera";
+                course    = path[2];
                
             }
     
             else if(hostname == "www.udemy.com" && path[2] == "learn"){
     
-                put_online = true;
-                platform = "Udemy";
-                course_name = path[1];
+                putOnline = true;
+                platform  = "Udemy";
+                course    = path[1];
     
             }
 
             else if(hostname == "classroom.udacity.com" && path[1] == "courses"){
     
-                put_online = true;
-                platform = "Udacity";
-                course_name = path[2];
+                putOnline = true;
+                platform  = "Udacity";
+                course    = path[2];
     
             }
     
-            if(put_online){
+            if(putOnline){
 
-                /*get_online_users = new Promise(function (resolve, reject){
+                /*getOnlineUsers = new Promise(function (resolve, reject){
 
                     $.ajax({
-                        url: server_url+"user/online/get/",
+                        url: serverUrl+"user/online/get/",
                         type: "POST",
                         crossDomain: true,
                         data: {
                             "username" : username,
                             "platform" : platform,
-                            "course"   : course_name
+                            "course"   : course
                         },
                         success: function(data){
                             if(data.status_code == 200){
-                                online_users = data.data;
-                                append_online_users();
+                                onlineUsers = data.data;
+                                appendOnlineUsers();
                             }
                         }
                     });
                 });*/
 
-                refresh_online_users();
+                refreshOnlineUsers();
 
                 $("#username").html(username);
                 $("#usernameGreet").html(username);
                 $("#platform").html(platform);
-                $("#coursename").html(course_name);
+                $("#coursename").html(course);
 
                 $("#section1").css("display", "none");
                 $("#section2").css("display","block");
@@ -217,14 +217,14 @@ $(function(){
                 $("#onlineBtn").prop('disabled', false);
                 
                 $.ajax({
-                    url: server_url+"user/online/put/",
+                    url: serverUrl+"user/online/put/",
                     type: "POST",
                     crossDomain: true,
                     data: {
                         "username" : username,
-                        "token"    : user_token,
+                        "token"    : userToken,
                         "platform" : platform,
-                        "course"   : course_name
+                        "course"   : course
                     },
                     success: function(data){
                         if(data.status_code == 200){
