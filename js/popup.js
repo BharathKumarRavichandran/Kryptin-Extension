@@ -1,14 +1,13 @@
 $(function(){
 
-    var server_url   = "http://www.kryptin.com/api/"; // Add localhost alias as http://www.kryptin.com/ in /etc/hosts file due of CORS issue
-    var username     = "some_random_shit_for_now";
+    var server_url   = "http://localhost:8000/api/"; // Add localhost alias as http://www.kryptin.com/ in /etc/hosts file due of CORS issue
+    var username     = "foobar";
     var user_token   = '';
     var platform     = "";
     var course_name  = "";
-    var online_users  = [];
+    var online_users = [];
     var get_online_users;
-
-    var views = chrome.extension.getViews({ type: "popup" });
+    var oppUsername  = "";
 
     function openPage(btn_id, section_id, color) {
 
@@ -21,10 +20,6 @@ $(function(){
         for (i = 0; i < tabcontent.length; i++) {
             tabcontent[i].style.display = "none";
         }
-        
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].style.backgroundColor = "grey";
-        }
     
         document.getElementById(section_id).style.display = "block";
     
@@ -32,12 +27,47 @@ $(function(){
     
     }
 
-    function append_online_users(){
+    function refresh_online_users(){
+        $.ajax({
+            url: server_url+"user/online/get/",
+            type: "POST",
+            crossDomain: true,
+            data: {
+                "username" : username,
+                "platform" : platform,
+                "course"   : course_name
+            },
+            success: function(data){
+                if(data.status_code == 200){
+                    online_users = data.data;
+                    append_online_users();
+                }
+            }
+        });
+    }
 
-        for(var i=0; i<online_users.length; i++){
-            $("#usersList").append("<div>"+online_users[i]+"</div>");
+    function append_online_users(){
+        if(online_users){
+            $.each(online_users, function(index, online_user){
+                $("#usersList").append('<div class="card list-container"><span><span id=onlineUsername'+index+' class="list-name">'+online_user['username']+'</span><button type="button" id=chatWith'+index+' class="btn material-raised-button chat-btn">Chat</button></span></div>');
+            });    
         }
-        
+    }
+
+    function onlineUsersScrollCheck(){
+        var out = document.getElementById("usersList");
+        var scrollToBottom = out.scrollTop + 1 <= out.scrollHeight - out.clientHeight;
+        if(scrollToBottom){
+            out.scrollTop = out.scrollHeight - out.clientHeight;
+        }
+    }
+
+    function chatAreaScrollCheck(){
+        var out = document.getElementById("chatArea");
+        var scrollToBottom = out.scrollTop + 1 <= out.scrollHeight - out.clientHeight;
+        if(scrollToBottom){
+            out.scrollTop = out.scrollHeight - out.clientHeight;
+        }
     }
 
     function getRandomToken() {
@@ -52,15 +82,45 @@ $(function(){
 
     $("#homeBtn").on("click", function(){
         openPage('homeBtn', 'homeSection', 'tomato');
+        $("#chatBtn").css("backgroundColor", "grey");
+        $("#chatBtn").prop('disabled', true);
     });
     
     $("#onlineBtn").on("click", function(){
         openPage('onlineBtn', 'onlineSection', '#0074D9');
-        append_online_users();
+        $("#chatBtn").css("backgroundColor", "grey");
+        $("#chatBtn").prop('disabled', true);
     });
     
-    $("#chatBtn").on("click", function(){
+    /*$("#chatBtn").on("click", function(){
         openPage('chatBtn', 'chatSection', 'blue');
+    });*/
+
+    var base     = document.querySelector("#usersList");
+    var selector = ".chat-btn";
+
+    base.addEventListener('click', function(event){
+
+        if(event.target.closest(selector) && event.target.classList.contains('chat-btn') && event.target.id.includes("chatWith") ){
+            
+            var idAttr = event.target.id;
+            var res = idAttr.split("chatWith");
+            var k = parseInt(res[1]);
+
+            oppUsername = $("#onlineUsername"+k).html();
+
+            console.log("Start your chat with "+oppUsername);
+
+            $("#chatBtn").css("backgroundColor", "blue");
+            $("#chatBtn").prop('disabled', false);
+
+            openPage('chatBtn', 'chatSection', 'blue');
+
+            $("#oppUsername").html(oppUsername);
+            $("#oppStatus").html("online");
+
+        }
+
     });
     
     $("#homeBtn").click();
@@ -117,52 +177,47 @@ $(function(){
     
             }
     
-            if(put_online && views.length>0){
+            if(put_online){
 
-                get_online_users = new Promise(function (resolve, reject){
-
-                    data = {
-                        "platform" : platform,
-                        "course"   : course_name
-                    };
+                /*get_online_users = new Promise(function (resolve, reject){
 
                     $.ajax({
                         url: server_url+"user/online/get/",
                         type: "POST",
                         crossDomain: true,
-                        dataType: "jsonp",
-                        jsonp: false,
                         data: {
+                            "username" : username,
                             "platform" : platform,
                             "course"   : course_name
                         },
                         success: function(data){
                             if(data.status_code == 200){
-                                online_users = data.message;
+                                online_users = data.data;
+                                append_online_users();
                             }
                         }
                     });
-                });
+                });*/
+
+                refresh_online_users();
 
                 $("#username").html(username);
+                $("#usernameGreet").html(username);
                 $("#platform").html(platform);
                 $("#coursename").html(course_name);
 
-                $("#section1").style.display = "none";
-                $("#section2").style.display = "block";
+                $("#section1").css("display", "none");
+                $("#section2").css("display","block");
 
-                document.getElementById("onlineBtn").setAttribute("disabled", "false");
-                document.getElementById("onlineBtn").style.backgroundColor = "green";
-
-                $("#username").html(username);
-                $("#platform").html(platform);
-                $("#coursename").html(course_name);
-                    
+                $("#onlineBtn").css("backgroundColor", "#0074D9");
+                $("#onlineBtn").prop('disabled', false);
+                /*$("#chatBtn").css("backgroundColor", "blue");
+                $("#chatBtn").prop('disabled', false);*/
+                
                 $.ajax({
                     url: server_url+"user/online/put/",
                     type: "POST",
                     crossDomain: true,
-                    dataType: 'jsonp',
                     data: {
                         "username" : username,
                         "token"    : user_token,
@@ -171,7 +226,7 @@ $(function(){
                     },
                     success: function(data){
                         if(data.status_code == 200){
-                            console.log(data.message); // success message should be "User status made online"
+                            console.log(data.data); // success message should be "User status made online" or "User created and status made online"
                         }
                     }
                 });
