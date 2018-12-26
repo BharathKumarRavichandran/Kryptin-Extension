@@ -130,8 +130,12 @@ $(function(){
             user_token = items.user_token;
             if(!user_token){
                 user_token = getRandomToken();
-                chrome.storage.local.set({user_token: user_token}, function() {
+                chrome.storage.sync.set({user_token: user_token}, function() {
+                    console.log("User token created")
                 });
+            }
+            else{
+                console.log("User token retrieved")
             }
             resolve(user_token);
         });
@@ -211,8 +215,6 @@ $(function(){
 
                 $("#onlineBtn").css("backgroundColor", "#0074D9");
                 $("#onlineBtn").prop('disabled', false);
-                /*$("#chatBtn").css("backgroundColor", "blue");
-                $("#chatBtn").prop('disabled', false);*/
                 
                 $.ajax({
                     url: server_url+"user/online/put/",
