@@ -6,19 +6,27 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Kryptin</title>
     <link href="https://fonts.googleapis.com/css?family=Montserrat|Raleway" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/bts-form-control.css">
+    <link rel="stylesheet" href="../css/bts-card.css">
+    <link rel="stylesheet" href="../css/popup.css">
+    <link rel="stylesheet" href="../css/footer.css">
     <link rel="stylesheet" href="../css/tabs.css">
+    <link rel="stylesheet" href="../css/chat.css">
+    <link rel="stylesheet" href="../css/material-raised-button.css">
+    <link rel="stylesheet" href="../css/material-flat-input.css">
     <script src="../js/jquery-3.3.1.min.js"></script>
 
 </head>
 <body>
 
     <button id="homeBtn" class="tablink">Home</button>
-    <button id="onlineBtn" class="tablink">Online</button>
-    <button id="chatBtn" class="tablink">Chat</button>
+    <button id="onlineBtn" class="tablink" disabled>Online</button>
+    <button id="chatBtn" class="tablink" disabled>Chat</button>
 
     <div id="homeSection" class="tabcontent">
+        <br/>
         <h3>
-            Hello <span id="username"></span> !
+            Hello <span id="usernameGreet">user</span> !
         </h3>
         <br/>
         <section id="section1">
@@ -29,28 +37,53 @@
                     <li>Udacity</li>
                 </ul>
             </div>
+            <br/>
         </section>
-        <br/>
-        <section id="section2" style="display: block;">
+        <section id="section2" style="display: none;">
             <div>
-                <span>Learning Platform : </span><span id="platform"></span>
+                <span>Username : </span><span id="username"></span>
             </div>
+            <br/>
             <div>
-                <span>Course name : </span><span id="coursename"></span>
+                <span>Learning Platform : </span><span id="platform">None</span>
+            </div>
+            <br/>
+            <div>
+                <span>Course name : </span><span id="coursename">None</span>
             </div>
         </section>
         <br/>
         <br/>
     </div>
 
-    <div id="onlineSection" class="tabcontent">
-        <h3>Users online:</h3>
-        <div id="usersList"></div>
+    <div id="onlineSection" class="tabcontent tab-header-true">
+        <div class="tab-header-container online-tab-container">
+            <h3 class="tab-header">
+                <span class="header">User's Online:</span>
+            </h3>
+        </div>    
+        <div id="usersList" class="online-users-list" style="max-height: 256px; height: 256px; width:100%; background-color: #FFFAFA; clear:both; overflow-y: scroll; color: black;">
+
+        </div>
     </div>
 
-    <div id="chatSection" class="tabcontent">
-        <h3>Chat</h3>
-        <p>Some news this fine day!</p> 
+    <div id="chatSection" class="tabcontent tab-header-true">
+        <div class="tab-header-container chat-tab-container">
+            <h3 class="tab-header">
+                <span id="oppUsername">John</span>
+                <span id="oppStatus" class="header-status">online</span>
+            </h3>
+        </div>
+        <div id="chatArea" class="chat-area" style="max-height: 228px; height: 228px; width:100%; background-color: #FFFAFA; clear:both; overflow-y: scroll; color: black;">
+            <div class="speech-bubble speech-bubble-left">Hey! This is John, taking machine-learning course from Coursera.</div>
+            <div class="speech-bubble speech-bubble-right">Hello John! Foobar here.</div>
+        </div>
+        <div class="footer chat-input-container">
+            <input type="text" id="chatInput" class="form-control material-flat-input chat-input" placeholder="Type a message" required>
+            <!--
+                <button type="button" class="btn material-raised-button material-raised-button-green btn-send" style="float: right;">Send</button>
+            -->
+        </div>
     </div>
 
     <script src="../js/config.js"></script>
