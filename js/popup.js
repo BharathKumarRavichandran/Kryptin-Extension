@@ -4,7 +4,7 @@ $(function(){
     var userToken    = "";
     var username     = "";
     var platform     = "";
-    var course       = "";
+    var coursename   = "";
     var onlineUsers  = [];
     var getOnlineUsers;
     var oppUsername  = "";
@@ -78,15 +78,15 @@ $(function(){
 
     }
 
-    function refreshOnlineUsers(userToken, platform, course){
+    function refreshOnlineUsers(userToken, platform, coursename){
         $.ajax({
             url: serverUrl+"user/online/get/",
             type: "POST",
             crossDomain: true,
             data: {
-                "token"    : userToken,
-                "platform" : platform,
-                "course"   : course
+                "token"      : userToken,
+                "platform"   : platform,
+                "coursename" : coursename
             },
             success: function(data){
                 if(data.status_code == 200){
@@ -97,16 +97,16 @@ $(function(){
         });
     }
 
-    function putUserOnline(username, userToken, platform, course){
+    function putUserOnline(username, userToken, platform, coursename){
         $.ajax({
             url: serverUrl+"user/online/put/",
             type: "POST",
             crossDomain: true,
             data: {
-                "username" : username,
-                "token"    : userToken,
-                "platform" : platform,
-                "course"   : course
+                "username"   : username,
+                "token"      : userToken,
+                "platform"   : platform,
+                "coursename" : coursename
             },
             success: function(data){
                 if(data.status_code == 200){
@@ -164,7 +164,6 @@ $(function(){
                 else{
                     console.log("User token retrieved")
                 }
-                console.log(userToken);
                 resolve(userToken);
             });
         });
@@ -187,25 +186,25 @@ $(function(){
                 
                 if(hostname == "www.coursera.org" && path[1] == "learn"){
         
-                    putOnline = true;
-                    platform  = "Coursera";
-                    course    = path[2];
+                    putOnline  = true;
+                    platform   = "Coursera";
+                    coursename = path[2];
                 
                 }
         
                 else if(hostname == "www.udemy.com" && path[2] == "learn"){
         
-                    putOnline = true;
-                    platform  = "Udemy";
-                    course    = path[1];
+                    putOnline  = true;
+                    platform   = "Udemy";
+                    coursename = path[1];
         
                 }
 
                 else if(hostname == "classroom.udacity.com" && path[1] == "courses"){
         
-                    putOnline = true;
-                    platform  = "Udacity";
-                    course    = path[2];
+                    putOnline  = true;
+                    platform   = "Udacity";
+                    coursename = path[2];
         
                 }
         
@@ -218,9 +217,9 @@ $(function(){
                             type: "POST",
                             crossDomain: true,
                             data: {
-                                "username" : username,
-                                "platform" : platform,
-                                "course"   : course
+                                "username"   : username,
+                                "platform"   : platform,
+                                "coursename" : coursename
                             },
                             success: function(data){
                                 if(data.status_code == 200){
@@ -231,12 +230,12 @@ $(function(){
                         });
                     });*/
 
-                    refreshOnlineUsers(userToken, platform, course);
+                    refreshOnlineUsers(userToken, platform, coursename);
 
                     $("#username").html(username);
                     $("#usernameGreet").html(username);
                     $("#platform").html(platform);
-                    $("#coursename").html(course);
+                    $("#coursename").html(coursename);
 
                     $("#section1").css("display", "none");
                     $("#section2").css("display","block");
@@ -244,7 +243,7 @@ $(function(){
                     $("#onlineBtn").css("backgroundColor", "#0074D9");
                     $("#onlineBtn").prop('disabled', false);
                     
-                    putUserOnline(username, userToken, platform, course);
+                    putUserOnline(username, userToken, platform, coursename);
                     
                 }
         
@@ -267,15 +266,12 @@ $(function(){
                 $("#section1").css("display", "none");
                 $("#section2").css("display", "none");
                 $("#section3").css("display", "block");
-                console.log('Entering username reject');
                 reject();
             }
-            console.log(username);
         });
     });
 
     getUsernamePromise.then(function (data){
-        console.log("In username resolve");
         main();
     }, function() {
         $("#usernameSubmit").on("click", ()=>{
