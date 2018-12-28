@@ -21,7 +21,11 @@
         "activeTab" ,
         "tabs",
         "http://localhost:8000/*",
-        "http://www.kryptin.com/*"
+        "https://localhost:8000/*",
+        "ws://localhost:8000/*",
+        "wss://localhost:8000/*",
+        "http://www.kryptin.com/*",
+        "https://www.kryptin.com/*"
     ],
     "content_security_policy": "script-src 'self' https://kryptin.com; object-src 'self'",
     "content_scripts": [{
