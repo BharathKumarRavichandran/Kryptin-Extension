@@ -1,6 +1,6 @@
 $(function(){
 
-    var serverUrl    = "http://localhost:8000/api/"; // Add localhost alias as http://www.kryptin.com/ in /etc/hosts file due of CORS issue
+    var serverUrl    = "https://127.0.0.1:8000/api/"; // Add localhost alias as http://www.kryptin.com/ in /etc/hosts file due of CORS issue
     var userToken    = "";
     var username     = "";
     var platform     = "";
@@ -8,6 +8,15 @@ $(function(){
     var onlineUsers  = [];
     var getOnlineUsers;
     var oppUsername  = "";
+
+    var endpoint = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/ws";
+    var loc      = window.location;
+    var wsStart  = 'ws://' + loc.host + loc.pathname;
+    if(loc.protocol = 'https:'){
+        wsStart = 'wss://'
+    }
+    var socket   = new WebSocket("wss://127.0.0.1:8001/api/user/chat/");
+
 
     var base     = document.querySelector("#usersList");
     var selector = ".chat-btn";
@@ -29,10 +38,59 @@ $(function(){
         $("#chatBtn").prop('disabled', true);
     });
 
-    /*$("#chatBtn").on("click", function(){
-        openPage('chatBtn', 'chatSection', 'blue');
-    });*/
+    socket.onopen = function(e){
+        console.log("Socket connection opened", e);
+        var msg = "Socket connection opened";
+        var data = {
+            'message': msg
+        }
+        socket.send(JSON.stringify(data));
+    }
 
+    socket.onmessage = function(e){
+        console.log("Socket connection data received", e);
+        receivedData = e.data;
+
+        fromUsername = receivedData.from_username;
+        toUsername   = receivedData.to_username;
+
+        if(toUsername == username){
+            onlineUsersList = $(".list-name");
+            onlineUsersList.forEach((element,index) => {
+                if(element.html() == fromUsername){
+                    $("#chatWith"+index).click();
+                    receivedMessage = receivedData.message;
+                    appendOppMessage(receivedMessage);
+                    break;
+                }
+            });
+        }
+    }
+
+    socket.onerror = function(e){
+        console.log("Socket connection error", e);
+    }
+
+    socket.onclose = function(e){
+        console.log("Socket connection closed", e);
+
+        receivedData = e.data;
+
+        fromUsername = receivedData.from_username;
+        toUsername   = receivedData.to_username;
+
+        if(toUsername == username){
+            onlineUsersList = $(".list-name");
+            onlineUsersList.forEach((element,index) => {
+                if(element.html() == fromUsername){
+                    $("#chatWith"+index).click();
+                    receivedMessage = receivedData.message;
+                    appendOppMessage(receivedMessage);
+                    break;
+                }
+            });
+        }
+    }
 
     function getRandomToken() {
         var randomPool = new Uint8Array(32);
@@ -42,22 +100,6 @@ $(function(){
             hex += randomPool[i].toString(16);
         }
         return hex;
-    }
-
-    function onlineUsersScrollCheck(){
-        var out = document.getElementById("usersList");
-        var scrollToBottom = out.scrollTop + 1 <= out.scrollHeight - out.clientHeight;
-        if(scrollToBottom){
-            out.scrollTop = out.scrollHeight - out.clientHeight;
-        }
-    }
-
-    function chatAreaScrollCheck(){
-        var out = document.getElementById("chatArea");
-        var scrollToBottom = out.scrollTop + 1 <= out.scrollHeight - out.clientHeight;
-        if(scrollToBottom){
-            out.scrollTop = out.scrollHeight - out.clientHeight;
-        }
     }
 
     function openPage(btnId, sectionId, color) {
@@ -116,12 +158,27 @@ $(function(){
         });
     }
 
+    function divScrollToBottom(selector){
+        $(selector).scrollTop($(selector).prop("scrollHeight"));
+    }
+
     function appendOnlineUsers(){
         if(onlineUsers){
             $.each(onlineUsers, function(index, onlineUser){
                 $("#usersList").append('<div class="card list-container"><span><span id=onlineUsername'+index+' class="list-name">'+onlineUser['username']+'</span><button type="button" id=chatWith'+index+' class="btn material-raised-button chat-btn">Chat</button></span></div>');
-            });    
+            });
+            divScrollToBottom("#usersList");
         }
+    }
+
+    function appendUserMessage(message){
+        $("#chatArea").append('<div class="speech-bubble speech-bubble-right">'+message+'</div>');
+        divScrollToBottom("#chatArea");
+    }
+
+    function appendOppMessage(message){
+        $("#chatArea").append('<div class="speech-bubble speech-bubble-left">'+message+'</div>');
+        divScrollToBottom("#chatArea");
     }
 
 
@@ -151,13 +208,32 @@ $(function(){
         
         });
 
+        $("#chatInput").on("keyup", (event) =>{
+            if(event.keyCode == 13){
+                sendMessage = $("#chatInput").val();
+                $("#chatInput").val("");
+                if(sendMessage){
+                    appendUserMessage(sendMessage);
+                    var data = {
+                        "fromUsername" : username,
+                        "toUsername"   : oppUsername,
+                        "message"      : sendMessage 
+                    }
+                    var sendData = {
+                        "data" : data
+                    }
+                    socket.send(JSON.stringify(sendData));
+                }
+            }
+        });
+
         getUIdPromise = new Promise(function (resolve, reject) {
-            chrome.storage.sync.get('userToken', function(items) {
+            chrome.storage.local.get('userToken', function(items) {
                 userToken = items.userToken;
                 if(!userToken){
                     userToken = getRandomToken();
                     console.log("User token created");
-                    chrome.storage.sync.set({userToken: userToken}, function() {
+                    chrome.storage.local.set({userToken: userToken}, function() {
                         console.log("User token saved");
                     });
                 }
@@ -253,7 +329,7 @@ $(function(){
     }
 
     getUsernamePromise = new Promise(function (resolve, reject) {
-        chrome.storage.sync.get('username', function(items) {
+        chrome.storage.local.get('username', function(items) {
             username = items.username;
             if(username){
                 console.log("Username retrieved");
@@ -277,10 +353,11 @@ $(function(){
         $("#usernameSubmit").on("click", ()=>{
             saveUsernamePromise = new Promise( (resolve, reject) =>{
                 username = $("#usernameInput").val();
-                chrome.storage.sync.set({username: username}, function() {
+                chrome.storage.local.set({username: username}, function() {
                     console.log("Username saved")
                 });
                 $("#usernameInput").val("");
+                $("#usernameGreet").html(username);
                 $("#section1").css("display", "block");
                 $("#section3").css("display", "none");
                 main();
