@@ -9,14 +9,7 @@ $(function(){
     var getOnlineUsers;
     var oppUsername  = "";
 
-    var endpoint = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/ws";
-    var loc      = window.location;
-    var wsStart  = 'ws://' + loc.host + loc.pathname;
-    if(loc.protocol = 'https:'){
-        wsStart = 'wss://'
-    }
     var socket   = new WebSocket("wss://127.0.0.1:8001/api/user/chat/");
-
 
     var base     = document.querySelector("#usersList");
     var selector = ".chat-btn";
@@ -41,11 +34,6 @@ $(function(){
 
     socket.onopen = function(e){
         console.log("Socket connection opened", e);
-        var msg = "Socket connection opened";
-        var data = {
-            'message': msg
-        }
-        socket.send(JSON.stringify(data));
     }
 
     socket.onmessage = function(e){
@@ -119,22 +107,6 @@ $(function(){
 
         document.getElementById(btnId).style.backgroundColor = color;
 
-    }
-
-    function checkUsernameAvailability(checkUsername){
-        $.ajax({
-            url: serverUrl+"user/usernameavailability/",
-            type: "POST",
-            crossDomain: true,
-            data: {
-                "username"   : checkUsername,
-            },
-            success: function(data){
-                if(data.status_code == 200){
-                    return(data.data);
-                }
-            }
-        });
     }
 
     function refreshOnlineUsers(userToken, platform, coursename){
@@ -222,6 +194,29 @@ $(function(){
                 $("#oppUsername").html(oppUsername);
                 $("#oppStatus").html("online");
         
+                $.ajax({
+                    url: serverUrl+"user/chat/retrieve/",
+                    type: "POST",
+                    crossDomain: true,
+                    data: {
+                        "fromUsername" : username,
+                        "toUsername"   : oppUsername,
+                        "token"        : userToken
+                    },
+                    success: function(data){
+                        if(data.status_code == 200){
+                            $.each(data.data, function(index, msgData){
+                                if(msgData['from_user']==username){
+                                    appendUserMessage(msgData['message']);
+                                }
+                                else{
+                                    appendOppMessage(msgData['message']);
+                                }
+                            });
+                        }
+                    }
+                });
+
             }
         
         });
@@ -303,26 +298,6 @@ $(function(){
                 }
         
                 if(putOnline){
-
-                    /*getOnlineUsers = new Promise(function (resolve, reject){
-
-                        $.ajax({
-                            url: serverUrl+"user/online/get/",
-                            type: "POST",
-                            crossDomain: true,
-                            data: {
-                                "username"   : username,
-                                "platform"   : platform,
-                                "coursename" : coursename
-                            },
-                            success: function(data){
-                                if(data.status_code == 200){
-                                    onlineUsers = data.data;
-                                    appendOnlineUsers();
-                                }
-                            }
-                        });
-                    });*/
 
                     refreshOnlineUsers(userToken, platform, coursename);
 
