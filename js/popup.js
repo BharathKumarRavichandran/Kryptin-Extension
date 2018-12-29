@@ -22,6 +22,7 @@ $(function(){
     var selector = ".chat-btn";
 
     var getUsernamePromise;
+    var checkUsernamePromise;
     var saveUsernamePromise;
     var getUIdPromise;
 
@@ -56,14 +57,14 @@ $(function(){
 
         if(toUsername == username){
             onlineUsersList = $(".list-name");
-            onlineUsersList.forEach((element,index) => {
+            for(var index=0; index<onlineUsersList.length(); index++){
                 if(element.html() == fromUsername){
                     $("#chatWith"+index).click();
                     receivedMessage = receivedData.message;
                     appendOppMessage(receivedMessage);
                     break;
                 }
-            });
+            }
         }
     }
 
@@ -120,12 +121,29 @@ $(function(){
 
     }
 
+    function checkUsernameAvailability(checkUsername){
+        $.ajax({
+            url: serverUrl+"user/usernameavailability/",
+            type: "POST",
+            crossDomain: true,
+            data: {
+                "username"   : checkUsername,
+            },
+            success: function(data){
+                if(data.status_code == 200){
+                    return(data.data);
+                }
+            }
+        });
+    }
+
     function refreshOnlineUsers(userToken, platform, coursename){
         $.ajax({
             url: serverUrl+"user/online/get/",
             type: "POST",
             crossDomain: true,
             data: {
+                "username"   : username,
                 "token"      : userToken,
                 "platform"   : platform,
                 "coursename" : coursename
@@ -350,19 +368,61 @@ $(function(){
     getUsernamePromise.then(function (data){
         main();
     }, function() {
-        $("#usernameSubmit").on("click", ()=>{
-            saveUsernamePromise = new Promise( (resolve, reject) =>{
-                username = $("#usernameInput").val();
-                chrome.storage.local.set({username: username}, function() {
-                    console.log("Username saved")
-                });
-                $("#usernameInput").val("");
-                $("#usernameGreet").html(username);
-                $("#section1").css("display", "block");
-                $("#section3").css("display", "none");
-                main();
+
+        checkUsernamePromise = new Promise((resolve, reject)=>{
+            $("#usernameInput").on("keyup", ()=>{
+                var checkUsername = $.trim($("#usernameInput").val());
+                if(checkUsername != ""){
+                    $.ajax({
+                        url: serverUrl+"user/usernameavailability/",
+                        type: "POST",
+                        crossDomain: true,
+                        data: {
+                            "username"   : checkUsername,
+                        },
+                        success: function(data){
+                            if(data.status_code == 200){
+                                var availabilityStatus = data.data;
+                                console.log(availabilityStatus);
+                                if(availabilityStatus == "available"){
+                                    $("#usernameSubmit").prop("disabled", false);
+                                    $("#usernameAvailabilityStatus").html("Username available!");
+                                    console.log("Username available!");
+                                    resolve();
+                                }
+                                else if(availabilityStatus=="unavailable"){
+                                    $("#usernameSubmit").prop("disabled", true);
+                                    $("#usernameAvailabilityStatus").html("Username unavailable!");
+                                    console.log("Username unavailable!");
+                                }
+                            }
+                        }
+                    });
+                }
+                else{
+                    $("#usernameSubmit").prop("disabled", true);
+                    $("#usernameAvailabilityStatus").html("Username cannot be empty!");
+                    console.log("Username cannot be empty!");
+                }
             });
         });
+
+        checkUsernamePromise.then(function (){
+            $("#usernameSubmit").on("click", ()=>{
+                saveUsernamePromise = new Promise( (resolve, reject) =>{
+                    username = $("#usernameInput").val();
+                    chrome.storage.local.set({username: username}, function() {
+                        console.log("Username saved");
+                    });
+                    $("#usernameInput").val("");
+                    $("#usernameGreet").html(username);
+                    $("#section1").css("display", "block");
+                    $("#section3").css("display", "none");
+                    main();
+                });
+            });
+        });
+        
     });
 
     $("#homeBtn").click();
