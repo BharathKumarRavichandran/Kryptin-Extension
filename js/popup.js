@@ -1,8 +1,13 @@
 $(function(){
 
-    var serverUrl    = "https://127.0.0.1:8000/api/"; // Add localhost alias as http://www.kryptin.com/ in /etc/hosts file due of CORS issue
+    chrome.browserAction.setBadgeText({text: ""});
+
+    var serverUrl    = "https://localhost:8000/api/";
     var userToken    = "";
     var username     = "";
+    var email        = "";
+    var password     = "";
+    var passToken    = "";
     var platform     = "";
     var coursename   = "";
     var onlineUsers  = [];
@@ -34,7 +39,7 @@ $(function(){
 
     socket.onopen = function(e){
         console.log("Socket connection opened", e);
-    }
+    };
 
     socket.onmessage = function(e){
         console.log("Socket connection data received", e);
@@ -54,11 +59,11 @@ $(function(){
                 }
             }
         }
-    }
+    };
 
     socket.onerror = function(e){
         console.log("Socket connection error", e);
-    }
+    };
 
     socket.onclose = function(e){
         console.log("Socket connection closed", e);
@@ -79,7 +84,7 @@ $(function(){
                 }
             });
         }
-    }
+    };
 
     function getRandomToken() {
         var randomPool = new Uint8Array(32);
@@ -109,14 +114,12 @@ $(function(){
 
     }
 
-    function refreshOnlineUsers(userToken, platform, coursename){
+    function refreshOnlineUsers(platform, coursename){
         $.ajax({
             url: serverUrl+"user/online/get/",
             type: "POST",
             crossDomain: true,
             data: {
-                "username"   : username,
-                "token"      : userToken,
                 "platform"   : platform,
                 "coursename" : coursename
             },
@@ -129,14 +132,12 @@ $(function(){
         });
     }
 
-    function putUserOnline(username, userToken, platform, coursename){
+    function putUserOnline(platform, coursename){
         $.ajax({
             url: serverUrl+"user/online/put/",
             type: "POST",
             crossDomain: true,
             data: {
-                "username"   : username,
-                "token"      : userToken,
                 "platform"   : platform,
                 "coursename" : coursename
             },
@@ -146,6 +147,29 @@ $(function(){
                 }
             }
         });
+    }
+
+    function getUsername(){
+        $.ajax({
+            url: serverUrl+"user/getusername",
+            type: "POST",
+            crossDomain: true,
+            data: {
+            },
+            success: function(data){
+                if(data.status_code == 200){
+                    console.log(data.data); // success message should be "User status made online" or "User created and status made online"
+                    username = data.data;
+                }
+            }
+        });
+    }
+
+    function clearChatMessages(){
+        var node = document.getElementById("chatArea");
+        while (node.firstChild) {
+            node.removeChild(node.firstChild);
+        }
     }
 
     function divScrollToBottom(selector){
@@ -190,6 +214,7 @@ $(function(){
                 $("#chatBtn").prop('disabled', false);
         
                 openPage('chatBtn', 'chatSection', 'blue');
+                clearChatMessages();
         
                 $("#oppUsername").html(oppUsername);
                 $("#oppStatus").html("online");
@@ -199,9 +224,7 @@ $(function(){
                     type: "POST",
                     crossDomain: true,
                     data: {
-                        "fromUsername" : username,
-                        "toUsername"   : oppUsername,
-                        "token"        : userToken
+                        "toUsername"   : oppUsername
                     },
                     success: function(data){
                         if(data.status_code == 200){
@@ -231,111 +254,103 @@ $(function(){
                         "fromUsername" : username,
                         "toUsername"   : oppUsername,
                         "message"      : sendMessage 
-                    }
+                    };
                     var sendData = {
                         "data" : data
-                    }
+                    };
                     socket.send(JSON.stringify(sendData));
                 }
             }
         });
 
-        getUIdPromise = new Promise(function (resolve, reject) {
-            chrome.storage.local.get('userToken', function(items) {
-                userToken = items.userToken;
-                if(!userToken){
-                    userToken = getRandomToken();
-                    console.log("User token created");
-                    chrome.storage.local.set({userToken: userToken}, function() {
-                        console.log("User token saved");
-                    });
-                }
-                else{
-                    console.log("User token retrieved")
-                }
-                resolve(userToken);
-            });
-        });
-
-        getUIdPromise.then(function (userToken) {
-
-            chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
+        chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
+        
+            const absurl = tabs[0].url;
+    
+            const url = document.createElement('a');
+            url.setAttribute('href',absurl);
+    
+            const hostname    = url.hostname;
+            const pathname    = url.pathname;
+    
+            const path = pathname.split('/');
+    
+            var putOnline = false;
             
-                const absurl = tabs[0].url;
-        
-                const url = document.createElement('a');
-                url.setAttribute('href',absurl);
-        
-                const hostname    = url.hostname;
-                const pathname    = url.pathname;
-        
-                const path = pathname.split('/');
-        
-                var putOnline = false;
+            if(hostname == "www.coursera.org" && path[1] == "learn"){
+    
+                putOnline  = true;
+                platform   = "Coursera";
+                coursename = path[2];
+            
+            }
+    
+            else if(hostname == "www.udemy.com" && path[2] == "learn"){
+    
+                putOnline  = true;
+                platform   = "Udemy";
+                coursename = path[1];
+    
+            }
+
+            else if(hostname == "classroom.udacity.com" && path[1] == "courses"){
+    
+                putOnline  = true;
+                platform   = "Udacity";
+                coursename = path[2];
+    
+            }
+    
+            if(putOnline){
+
+                refreshOnlineUsers(platform, coursename);
+
+                $("#username").html(username);
+                $("#usernameGreet").html(username);
+                $("#platform").html(platform);
+                $("#coursename").html(coursename);
+
+                $("#section1").css("display", "none");
+                $("#section2").css("display","block");
+
+                $("#onlineBtn").css("backgroundColor", "#0074D9");
+                $("#onlineBtn").prop('disabled', false);
                 
-                if(hostname == "www.coursera.org" && path[1] == "learn"){
-        
-                    putOnline  = true;
-                    platform   = "Coursera";
-                    coursename = path[2];
+                putUserOnline(platform, coursename);
                 
-                }
-        
-                else if(hostname == "www.udemy.com" && path[2] == "learn"){
-        
-                    putOnline  = true;
-                    platform   = "Udemy";
-                    coursename = path[1];
-        
-                }
-
-                else if(hostname == "classroom.udacity.com" && path[1] == "courses"){
-        
-                    putOnline  = true;
-                    platform   = "Udacity";
-                    coursename = path[2];
-        
-                }
-        
-                if(putOnline){
-
-                    refreshOnlineUsers(userToken, platform, coursename);
-
-                    $("#username").html(username);
-                    $("#usernameGreet").html(username);
-                    $("#platform").html(platform);
-                    $("#coursename").html(coursename);
-
-                    $("#section1").css("display", "none");
-                    $("#section2").css("display","block");
-
-                    $("#onlineBtn").css("backgroundColor", "#0074D9");
-                    $("#onlineBtn").prop('disabled', false);
-                    
-                    putUserOnline(username, userToken, platform, coursename);
-                    
-                }
-        
-            });
+            }
+    
         });
 
     }
 
     getUsernamePromise = new Promise(function (resolve, reject) {
-        chrome.storage.local.get('username', function(items) {
-            username = items.username;
-            if(username){
-                console.log("Username retrieved");
-                $("#section1").css("display", "block");
-                $("#section3").css("display", "none");
-                $("#usernameGreet").html(username);
-                resolve(username);
-            }
-            else{
-                $("#section1").css("display", "none");
-                $("#section2").css("display", "none");
-                $("#section3").css("display", "block");
-                reject();
+        $.ajax({
+            url: serverUrl+"user/getusername/",
+            type: "POST",
+            crossDomain: true,
+            data: {
+            },
+            success: function(data){
+                alert(data);
+                if(data.status_code == 200){
+                    console.log(data.data); // success message should be "User status made online" or "User created and status made online"
+                    username = data.data;
+                    alert(username);
+                    if(username){
+                        console.log("Username retrieved");
+                        $("#section1").css("display", "block");
+                        $("#section3").css("display", "none");
+                        $("#usernameGreet").html(username);
+                        resolve(username);
+                    }
+                    else{
+                        $("#section1").css("display", "none");
+                        $("#section2").css("display", "none");
+                        $("#section3").css("display", "block");
+                        reject();
+                    }
+                }
             }
         });
     });
@@ -343,61 +358,10 @@ $(function(){
     getUsernamePromise.then(function (data){
         main();
     }, function() {
-
-        checkUsernamePromise = new Promise((resolve, reject)=>{
-            $("#usernameInput").on("keyup", ()=>{
-                var checkUsername = $.trim($("#usernameInput").val());
-                if(checkUsername != ""){
-                    $.ajax({
-                        url: serverUrl+"user/usernameavailability/",
-                        type: "POST",
-                        crossDomain: true,
-                        data: {
-                            "username"   : checkUsername,
-                        },
-                        success: function(data){
-                            if(data.status_code == 200){
-                                var availabilityStatus = data.data;
-                                console.log(availabilityStatus);
-                                if(availabilityStatus == "available"){
-                                    $("#usernameSubmit").prop("disabled", false);
-                                    $("#usernameAvailabilityStatus").html("Username available!");
-                                    console.log("Username available!");
-                                    resolve();
-                                }
-                                else if(availabilityStatus=="unavailable"){
-                                    $("#usernameSubmit").prop("disabled", true);
-                                    $("#usernameAvailabilityStatus").html("Username unavailable!");
-                                    console.log("Username unavailable!");
-                                }
-                            }
-                        }
-                    });
-                }
-                else{
-                    $("#usernameSubmit").prop("disabled", true);
-                    $("#usernameAvailabilityStatus").html("Username cannot be empty!");
-                    console.log("Username cannot be empty!");
-                }
-            });
+        alert("not logged in");
+        chrome.tabs.create({
+            url: "html/options.html"
         });
-
-        checkUsernamePromise.then(function (){
-            $("#usernameSubmit").on("click", ()=>{
-                saveUsernamePromise = new Promise( (resolve, reject) =>{
-                    username = $("#usernameInput").val();
-                    chrome.storage.local.set({username: username}, function() {
-                        console.log("Username saved");
-                    });
-                    $("#usernameInput").val("");
-                    $("#usernameGreet").html(username);
-                    $("#section1").css("display", "block");
-                    $("#section3").css("display", "none");
-                    main();
-                });
-            });
-        });
-        
     });
 
     $("#homeBtn").click();

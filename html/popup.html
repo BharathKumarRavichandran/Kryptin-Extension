@@ -28,8 +28,8 @@
         <h3>
             Hello <span id="usernameGreet">user</span> !
         </h3>
-        <br/>
         <section id="section1" style="display: none;">
+            <br/>
             <div>Visit any course from supported platforms to connect with other students :
                 <ul>
                     <li>Coursera</li>
@@ -40,6 +40,7 @@
             <br/>
         </section>
         <section id="section2" style="display: none;">
+            <br/>
             <div>
                 <span>Username : </span><span id="username"></span>
             </div>
@@ -53,15 +54,13 @@
             </div>
         </section>
         <section id="section3">
-            <div>Enter your name :<br/><br/>
-                <input type="text" id="usernameInput" class="material-flat-input" placeholder="Name" style="width: 200px; height: 36px;">
-                <button type="button" id="usernameSubmit" class="button material-raised-button" disabled>Submit</button>
-            </div>
             <br/>
-            <div id="usernameAvailabilityStatus"></div>
+            <br/>
+            <div style="margin-left: 60px;">
+                <a href="chrome-extension://apjnjddligadamomggdkbbiccgmagmdo/html/options.html" target="_blank"><button id="loginBtn" class="button material-raised-button material-raised-button-green" value="Login">Login</button></a>
+                <a href="chrome-extension://apjnjddligadamomggdkbbiccgmagmdo/html/options.html" target="_blank"></a><button id="registerBtn" class="button material-raised-button material-raised-button-green" value="Register">Register</button></a>
+            </div>
         </section>
-        <br/>
-        <br/>
     </div>
 
     <div id="onlineSection" class="tabcontent tab-header-true">
@@ -78,8 +77,8 @@
     <div id="chatSection" class="tabcontent tab-header-true">
         <div class="tab-header-container chat-tab-container">
             <h3 class="tab-header">
-                <span id="oppUsername">John</span>
-                <span id="oppStatus" class="header-status">online</span>
+                <span id="oppUsername"></span>
+                <span id="oppStatus" class="header-status"></span>
             </h3>
         </div>
         <div id="chatArea" class="chat-area" style="max-height: 228px; height: 228px; width:100%; background-color: #FFFAFA; clear:both; overflow-y: scroll; color: black;">
