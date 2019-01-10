@@ -109,6 +109,13 @@ $(function(){
 
     }
 
+    function clearChatMessages(){
+        var node = document.getElementById("chatArea");
+        while (node.firstChild) {
+            node.removeChild(node.firstChild);
+        }
+    }
+
     function refreshOnlineUsers(userToken, platform, coursename){
         $.ajax({
             url: serverUrl+"user/online/get/",
@@ -188,6 +195,8 @@ $(function(){
         
                 $("#chatBtn").css("backgroundColor", "blue");
                 $("#chatBtn").prop('disabled', false);
+
+                clearChatMessages();
         
                 openPage('chatBtn', 'chatSection', 'blue');
         
